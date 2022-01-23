@@ -43,8 +43,6 @@
         let xAxis = [];
         let series_cpu = [];
         let series_memory = [];
-        let series_disk_c = [];
-        let series_disk_d = [];
 
         const websocket = new WebSocket("ws://localhost:5768/");
 
@@ -63,8 +61,6 @@
                 array_update(xAxis, length, json.result["time"]);
                 array_update(series_cpu, length, json.result["cpu"]);
                 array_update(series_memory, length, json.result["memory"]);
-                array_update(series_disk_c, length, json.result["disk"]["C:"]);
-                array_update(series_disk_d, length, json.result["disk"]["D:"]);
             }
             let option = {
                 title: {
@@ -132,23 +128,7 @@
                         symbol: "none",
                         areaStyle: {},
                         data: series_memory,
-                    },
-                    {
-                        name: "C:",
-                        type: "line",
-                        smooth: true,
-                        symbol: "none",
-                        areaStyle: {},
-                        data: series_disk_c,
-                    },
-                    {
-                        name: "D:",
-                        type: "line",
-                        smooth: true,
-                        symbol: "none",
-                        areaStyle: {},
-                        data: series_disk_d,
-                    },
+                    }
                 ]
             };
             chart.setOption(option);

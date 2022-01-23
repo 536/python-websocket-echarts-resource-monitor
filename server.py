@@ -19,10 +19,6 @@ async def analysis(websocket):
                 "time": time.strftime('%M:%S'),
                 "memory": psutil.virtual_memory().percent,
                 "cpu": psutil.cpu_percent(),
-                "disk": {
-                    "C:": psutil.disk_usage('C:').percent,
-                    "D:": psutil.disk_usage('D:').percent
-                }
             }
         }
         print(data)

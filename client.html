@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="txt/html; charset=utf-8"/>
+    <title>WebSocket Resource Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.2.2/dist/echarts.min.js"></script>
+    <script>
+        function array_update(array, len, value) {
+            array.push(value);
+            if (array.length >= len) {
+                array.shift();
+            }
+        }
+    </script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart {
+            width: 960px;
+            height: 540px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+<div class="chart"></div>
+<script>
+    const chart = echarts.init(document.querySelector(".chart"));
+    window.addEventListener("DOMContentLoaded", () => {
+        const length = 50;
+        let xAxis = [];
+        let series_cpu = [];
+        let series_memory = [];
+        let series_disk_c = [];
+        let series_disk_d = [];
+
+        const websocket = new WebSocket("ws://localhost:5768/");
+
+        websocket.onopen = () => {
+            console.log("Websocket connected!");
+        };
+
+        websocket.onclose = () => {
+            console.log("Websocket disconnected!");
+        };
+
+        websocket.onmessage = ({data}) => {
+            let json = JSON.parse(data);
+            console.log(json);
+            if (json.code === 0) {
+                array_update(xAxis, length, json.result["time"]);
+                array_update(series_cpu, length, json.result["cpu"]);
+                array_update(series_memory, length, json.result["memory"]);
+                array_update(series_disk_c, length, json.result["disk"]["C:"]);
+                array_update(series_disk_d, length, json.result["disk"]["D:"]);
+            }
+            let option = {
+                title: {
+                    text: "WebSocket Resource Monitor"
+                },
+                tooltip: {
+                    trigger: "axis",
+                    axisPointer: {
+                        type: "cross"
+                    }
+                },
+                legend: {
+                    data: ["CPU", "Memory", "C:", "D:"]
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        dataView: {readOnly: true},
+                        magicType: {type: ["line", "bar"]},
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: [{
+                    type: "category",
+                    data: xAxis,
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            color: "rgba(0,0,0,.1)",
+                            width: 1,
+                            type: "solid"
+                        },
+                    },
+                    axisTick: {
+                        show: true,
+                    },
+                    axisLabel: {
+                        rotate: 45,
+                        show: true,
+                    },
+                }],
+                yAxis: {
+                    type: "value",
+                    min: 0,
+                    max: 100,
+                    interval: 20,
+                    axisLabel: {
+                        formatter: "{value} %"
+                    }
+                },
+                series: [
+                    {
+                        name: "CPU",
+                        type: "line",
+                        smooth: true,
+                        symbol: "none",
+                        areaStyle: {},
+                        data: series_cpu,
+                    },
+                    {
+                        name: "Memory",
+                        type: "line",
+                        smooth: true,
+                        symbol: "none",
+                        areaStyle: {},
+                        data: series_memory,
+                    },
+                    {
+                        name: "C:",
+                        type: "line",
+                        smooth: true,
+                        symbol: "none",
+                        areaStyle: {},
+                        data: series_disk_c,
+                    },
+                    {
+                        name: "D:",
+                        type: "line",
+                        smooth: true,
+                        symbol: "none",
+                        areaStyle: {},
+                        data: series_disk_d,
+                    },
+                ]
+            };
+            chart.setOption(option);
+        };
+    });
+    window.addEventListener("resize", function () {
+        chart.resize();
+    });
+</script>
+</body>
+
+</html>
